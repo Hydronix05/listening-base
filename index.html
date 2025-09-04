@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Listening-Base</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="header-left">
+      <h1>Listening-Base</h1>
+      <p>Find your favourite song to listen and its lyrics to read.</p>
+    </div>
+    <div class="header-right">
+      <input type="text" id="searchBar" placeholder="Search songs...">
+      <img src="https://uploads.onecompiler.io/43m56waex/43ts7am7c/Screenshot%202025-08-16%209.25.29%20AM.png" 
+           alt="Settings" id="settingsIcon">
+    </div>
+  </header>
+
+  <main>
+    <div class="song-gallery" id="songGallery">
+      <!-- Songs will be added dynamically -->
+    </div>
+  </main>
+
+  <script>
+    // Settings click logic
+    document.getElementById("settingsIcon").addEventListener("click", function() {
+      const user = localStorage.getItem("currentUser");
+      if (!user) {
+        window.location.href = "login.html";
+      } else {
+        window.location.href = "settings.html";
+      }
+    });
+
+    // Fetch songs from JSONBin
+    const songsBin = "https://api.jsonbin.io/v3/b/68a88ec8ae596e708fd1509b/latest";
+    let allSongs = [];
+
+    fetch(songsBin, {
+      method: "GET",
+      headers: {
+        "X-Master-Key": "$2a$10$FVT/.yeWkrbFDOUeeyo18uJWOkV4fXsRYGJ883l2CmthR26m.pc9."
+      }
+    })
+    .then(res => res.json())
+    .then(data => {
+      allSongs = data.record;
+      displaySongs(allSongs);
+    })
+    .catch(err => console.error("Error fetching songs:", err));
+
+    // Function to display songs
+    function displaySongs(songs) {
+      const gallery = document.getElementById("songGallery");
+      gallery.innerHTML = "";
+      songs.forEach(song => {
+        const songDiv = document.createElement("div");
+        songDiv.classList.add("song");
+        songDiv.innerHTML = `
+          <h2>${song.name}</h2>
+          ${song.link} <!-- full iframe stored in JSONBin -->
+          <p class="uploader-info">Uploaded by ${song.uploader}</p>
+        `;
+        songDiv.addEventListener("click", () => {
+          localStorage.setItem("currentSongId", song.id);
+          window.location.href = "song.html";
+        });
+        gallery.appendChild(songDiv);
+      });
+    }
+
+    // Search logic
+    document.getElementById("searchBar").addEventListener("input", function() {
+      const query = this.value.toLowerCase();
+      const filteredSongs = allSongs.filter(song =>
+        song.name.toLowerCase().includes(query)
+      );
+      displaySongs(filteredSongs);
+    });
+  </script>
+</body>
+</html>
